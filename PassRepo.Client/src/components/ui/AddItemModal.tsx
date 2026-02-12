@@ -12,15 +12,20 @@ interface AddItemModalProps {
 }
 
 export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSave }) => {
-    // Store'dan kategorileri çekiyoruz
     const { categories } = useCategoryStore();
+
+    // GÜNCELLEME: Eğer kategori listesi boşsa, 'Genel' adında geçici bir seçenek oluştur
+    // Bu sayede UI bozulmaz ama Grid'de görünmez
+    const displayCategories = categories.length > 0 ? categories : [
+        { id: 'default', name: 'Genel', iconName: 'Folder', color: 'bg-zinc-800' }
+    ];
 
     const [formData, setFormData] = useState({
         title: '',
         username: '',
         password: '',
-        // Varsayılan olarak ilk kategoriyi veya 'Genel'i seçelim
-        category: 'Genel',
+        // Eğer hiç kategori yoksa 'Genel' seçili gelsin
+        category: categories.length > 0 ? categories[0].name : 'Genel',
         iconType: 'brand' as 'brand' | 'letter',
     });
 
@@ -86,21 +91,26 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
                         {/* Scrollable Body */}
                         <div className="w-full flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-8 no-scrollbar">
 
-                            {/* Section: Category - ARTIK DİNAMİK */}
+                            {/* Section: Category */}
                             <div className="space-y-3">
                                 <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">Kategori</label>
                                 <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar scroll-smooth pl-1">
-                                    {categories.map(cat => (
+                                    {/* categories.map yerine displayCategories.map kullanıyoruz */}
+                                    {displayCategories.map(cat => (
                                         <button
                                             key={cat.id}
+                                            // @ts-ignore
                                             onClick={() => setFormData({ ...formData, category: cat.name })}
                                             className={cn(
                                                 "px-5 py-3 rounded-2xl text-[15px] font-semibold whitespace-nowrap transition-all duration-200 shrink-0 border",
+                                                // @ts-ignore
                                                 formData.category === cat.name
-                                                    ? cn("text-white shadow-lg shadow-blue-900/20 border-transparent", cat.color) // Dinamik renk kullanımı
+                                                    // @ts-ignore
+                                                    ? cn("text-white shadow-lg shadow-blue-900/20 border-transparent", cat.color)
                                                     : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800"
                                             )}
                                         >
+                                            {/* @ts-ignore */}
                                             {cat.name}
                                         </button>
                                     ))}

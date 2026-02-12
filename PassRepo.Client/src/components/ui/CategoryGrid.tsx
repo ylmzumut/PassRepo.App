@@ -1,76 +1,88 @@
 import React from 'react';
-import { Landmark, Mail, Key, Briefcase, Share2, MoreHorizontal } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { useCategoryStore } from '../../store/categoryStore';
 import { useViewStore } from '../../store/viewStore';
-import type { Category } from '../../types';
-
-interface CategoryCardProps {
-    name: Category['name'];
-    icon: React.ElementType;
-    color: string;
-    count: number;
-    onClick: () => void;
-}
-
-const CategoryCard: React.FC<CategoryCardProps> = ({ name, icon: Icon, color, count, onClick }) => {
-    // Extract color base (e.g. 'bg-blue-600' -> 'blue') might be complex with arbitrary tailwind classes.
-    // For simplicity, let's assume 'color' prop passed is 'text-blue-400' or similar, OR we map generic colors.
-    // However, the prompt says: "For 'Banka', the icon wrapper should have bg-blue-500/10 text-blue-400".
-    // The current mock data sends 'bg-blue-600'. I'll adjust the rendering to try and derive the style or just use the passed color as bg with low opacity.
-
-    // Quick fix: Map the incoming solid bg color to a corresponding style manually or use style prop.
-    // Actually, let's do a simple mapping based on the color class string if possible, or just use the passed color with opacity if it's a tailwind class? 
-    // Tailwind doesn't support dynamic class modification easily like `bg-blue-600/10`.
-    // Let's rely on the `color` prop being the primary color and we style around it.
-
-    // Better approach for this task: changing the prop usage. 
-    // But to avoid breaking changes, let's rewrite the render to use inline styles or specific class logic.
-    // Let's assume the `color` prop is exactly what we want for the icon background opacity.
-
-    // To achieve the requested look, let's just make the card glass and the icon contain the color.
-
-    return (
-        <button
-            onClick={onClick}
-            className="aspect-square bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 active:scale-[0.98] transition-all duration-200 group relative overflow-hidden shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"
-        >
-            <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110", color.replace('bg-', 'bg-').replace('600', '500/10').replace('500', '500/10') + " " + color.replace('bg-', 'text-').replace('600', '400').replace('500', '400'))}>
-                <Icon size={28} strokeWidth={2} />
-            </div>
-
-            <div className="text-center z-10">
-                <span className="block text-zinc-200 font-bold text-base tracking-tight">{name}</span>
-                <span className="block text-neutral-500 text-xs font-medium mt-1">{count} Öğe</span>
-            </div>
-        </button>
-    );
-};
+import * as LucideIcons from 'lucide-react'; // İkonları dinamik çağırmak için
+import { cn } from '../../lib/utils';
+import { motion } from 'framer-motion';
 
 export const CategoryGrid = () => {
+    const { categories } = useCategoryStore();
     const { selectCategory } = useViewStore();
 
-    // In a real app, these counts would come from the store/database
-    const categories = [
-        { name: 'Banka', icon: Landmark, color: 'bg-blue-600' },
-        { name: 'Mail', icon: Mail, color: 'bg-red-500' },
-        { name: 'Sosyal', icon: Share2, color: 'bg-sky-500' },
-        { name: 'İş', icon: Briefcase, color: 'bg-amber-600' },
-        { name: 'Genel', icon: Key, color: 'bg-emerald-500' },
-        { name: 'Diğer', icon: MoreHorizontal, color: 'bg-violet-500' },
-    ] as const;
+    // Renklerin "Glow" (Parlama) efektini hesaplamak için yardımcı fonksiyon
+    const getGlowColor = (bgClass: string) => {
+        // bg-blue-600 -> shadow-blue-500/30 gibi bir dönüşüm yapar
+        if (bgClass.includes('blue')) return 'shadow-blue-500/30 text-blue-400';
+        if (bgClass.includes('red')) return 'shadow-red-500/30 text-red-400';
+        if (bgClass.includes('emerald')) return 'shadow-emerald-500/30 text-emerald-400';
+        if (bgClass.includes('orange')) return 'shadow-orange-500/30 text-orange-400';
+        if (bgClass.includes('purple')) return 'shadow-purple-500/30 text-purple-400';
+        if (bgClass.includes('pink')) return 'shadow-pink-500/30 text-pink-400';
+        if (bgClass.includes('yellow')) return 'shadow-yellow-500/30 text-yellow-400';
+        if (bgClass.includes('sky')) return 'shadow-sky-500/30 text-sky-400';
+        return 'shadow-white/10 text-white';
+    };
 
     return (
-        <div className="grid grid-cols-2 gap-4 px-2 pb-24">
-            {categories.map((cat) => (
-                <CategoryCard
-                    key={cat.name}
-                    name={cat.name}
-                    icon={cat.icon}
-                    color={cat.color}
-                    count={0} // Mock count for now
-                    onClick={() => selectCategory(cat.name)}
-                />
-            ))}
+        <div className="grid grid-cols-2 gap-4">
+            {categories.map((cat, index) => {
+                // Dinamik İkon Seçimi (String -> Component)
+                // @ts-ignore
+                const IconComponent = LucideIcons[cat.iconName] || LucideIcons.Circle;
+                const glowStyle = getGlowColor(cat.color);
+
+                return (
+                    <motion.button
+                        key={cat.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => selectCategory(cat.name)}
+                        className={cn(
+                            "group relative aspect-square rounded-[2rem] p-5 flex flex-col justify-between text-left transition-all duration-300",
+                            "bg-zinc-900 border border-white/5 hover:border-white/10 active:scale-95"
+                        )}
+                    >
+                        {/* Arka Plan Gradient (Hafif) */}
+                        <div className={cn(
+                            "absolute inset-0 rounded-[2rem] opacity-0 group-hover:opacity-10 transition-opacity bg-gradient-to-br",
+                            cat.color.replace('bg-', 'from-').replace('-600', '-500').replace('-500', '-500') + " to-transparent"
+                        )} />
+
+                        {/* İkon Kutusu */}
+                        <div className={cn(
+                            "h-12 w-12 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-lg",
+                            cat.color, // Arka plan rengi (Örn: bg-blue-600)
+                            "text-white"
+                        )}>
+                            <IconComponent size={24} strokeWidth={2.5} />
+                        </div>
+
+                        {/* Yazılar */}
+                        <div className="z-10">
+                            <h3 className="text-lg font-bold text-white tracking-tight group-hover:translate-x-1 transition-transform">
+                                {cat.name}
+                            </h3>
+                            {/* Buraya ilerde "5 Öğe" gibi sayaç ekleyebiliriz */}
+                            <span className="text-xs font-medium text-zinc-500 group-hover:text-zinc-400 transition-colors">
+                                Kasa
+                            </span>
+                        </div>
+
+                        {/* Sağ Üst Ok (Hover Efekti) */}
+                        <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity text-zinc-500">
+                            <LucideIcons.ArrowUpRight size={20} />
+                        </div>
+                    </motion.button>
+                );
+            })}
+
+            {/* Boş Durumda (Hiç Kategori Yoksa) Uyarı */}
+            {categories.length === 0 && (
+                <div className="col-span-2 p-8 text-center border border-dashed border-zinc-800 rounded-3xl text-zinc-500">
+                    <p>Henüz kategori yok. Ayarlardan ekleyebilirsin.</p>
+                </div>
+            )}
         </div>
     );
 };

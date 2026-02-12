@@ -1,10 +1,13 @@
 import axios from 'axios';
 
+// Backend terminalinde gördüğün portu buraya yaz (Örn: https://localhost:7123 veya http://localhost:5087)
+const API_URL = 'http://localhost:5087/api';
+
 const api = axios.create({
-    baseURL: 'http://localhost:5087/api', // Reverted to 5087 (HTTP) to avoid SSL/HTTPS mismatch errors with 44398.
-    // Actually, let's use a relative path '/api' since we might proxy or host on same domain in IIS.
-    // But for dev (Vite running on 5173, API on 5xxx), we need absolute.
-    // Let's set it to 5000 for now.
+    baseURL: API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
 api.interceptors.request.use((config) => {
@@ -14,5 +17,16 @@ api.interceptors.request.use((config) => {
     }
     return config;
 });
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default api;

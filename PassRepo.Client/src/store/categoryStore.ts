@@ -1,33 +1,55 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import api from '../services/ApiService';
 import type { Category } from '../types';
 
 interface CategoryState {
     categories: Category[];
-    addCategory: (category: Category) => void;
-    removeCategory: (id: string) => void;
+    isLoading: boolean;
+    fetchCategories: () => Promise<void>;
+    addCategory: (cat: Omit<Category, 'id'>) => Promise<void>;
+    removeCategory: (id: string) => Promise<void>;
 }
 
-// Varsayılan Kategoriler
-const DEFAULT_CATEGORIES: Category[] = [
-    { id: '1', name: 'Banka', iconName: 'Landmark', color: 'bg-blue-600' },
-    { id: '2', name: 'Mail', iconName: 'Mail', color: 'bg-red-500' },
-    { id: '3', name: 'Sosyal', iconName: 'Share2', color: 'bg-sky-500' },
-    { id: '4', name: 'İş', iconName: 'Briefcase', color: 'bg-orange-500' },
-    { id: '5', name: 'Genel', iconName: 'Key', color: 'bg-emerald-500' },
-];
+// GÜNCELLEME: Varsayılan liste artık BOŞ
+const DEFAULT_CATEGORIES: Category[] = [];
 
-export const useCategoryStore = create<CategoryState>()(
-    persist(
-        (set) => ({
-            categories: DEFAULT_CATEGORIES,
-            addCategory: (cat) => set((state) => ({ categories: [...state.categories, cat] })),
-            removeCategory: (id) => set((state) => ({
-                categories: state.categories.filter((c) => c.id !== id)
-            })),
-        }),
-        {
-            name: 'passrepo-categories', // LocalStorage'da bu isimle saklanacak
+export const useCategoryStore = create<CategoryState>((set, get) => ({
+    categories: DEFAULT_CATEGORIES,
+    isLoading: false,
+
+    fetchCategories: async () => {
+        set({ isLoading: true });
+        try {
+            const res = await api.get('/categories');
+            const serverCats = res.data;
+            // Varsayılan yok, sadece sunucudan geleni koyuyoruz
+            set({ categories: serverCats });
+        } catch (error) {
+            console.error("Kategoriler yüklenemedi", error);
+        } finally {
+            set({ isLoading: false });
         }
-    )
-);
+    },
+
+    addCategory: async (cat) => {
+        try {
+            const res = await api.post('/categories', cat);
+            const newCat = res.data;
+            set((state) => ({ categories: [...state.categories, newCat] }));
+        } catch (error) {
+            console.error("Kategori eklenemedi", error);
+            throw error;
+        }
+    },
+
+    removeCategory: async (id) => {
+        try {
+            await api.delete(`/categories/${id}`);
+            set((state) => ({
+                categories: state.categories.filter((c) => c.id !== id)
+            }));
+        } catch (error) {
+            console.error("Silme hatası", error);
+        }
+    }
+}));

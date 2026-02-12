@@ -1,121 +1,141 @@
 import React, { useState } from 'react';
-import { Copy, Eye, EyeOff, Trash2, ExternalLink } from 'lucide-react';
-import { LogoIcon } from './LogoIcon';
-import { cn } from '../../lib/utils';
+import { motion } from 'framer-motion';
+import { ChevronLeft, Edit3, Copy, Eye, EyeOff, Globe, Lock } from 'lucide-react';
+import { useViewStore } from '../store/viewStore';
+import { LogoIcon } from './ui/LogoIcon';
 import { toast } from 'sonner';
 
-interface VaultDetailProps {
-    item: {
-        id: string;
-        url: string;
-        username: string;
-        decryptedPassword?: string;
-        notes: string;
-    };
-    onClose: () => void;
-    onDelete: (id: string) => void;
-}
-
-export const VaultDetail: React.FC<VaultDetailProps> = ({ item, onClose, onDelete }) => {
+export const VaultDetailView = () => {
+    const { selectedItem, closeItem } = useViewStore();
     const [showPassword, setShowPassword] = useState(false);
 
-    const handleCopy = (text: string, label: string) => {
-        navigator.clipboard.writeText(text);
-        toast.success(`${label} kopyalandı`);
-    };
+    if (!selectedItem) return null;
 
-    const handleDelete = () => {
-        if (confirm('Bu kaydı silmek istediğinize emin misiniz?')) {
-            onDelete(item.id);
-            onClose();
-        }
+    const copyToClipboard = (text: string | undefined, label: string) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text);
+        toast.success(`${label} kopyalandı!`, {
+            style: { background: '#22c55e', color: '#fff', border: 'none' }
+        });
+        if (navigator.vibrate) navigator.vibrate(50);
     };
 
     return (
-        <div className="flex flex-col items-center space-y-8">
-            {/* Header / Logo */}
-            <div className="flex flex-col items-center space-y-4">
-                <LogoIcon title={item.url} className="h-24 w-24 text-4xl shadow-2xl shadow-indigo-500/20" />
-                <h2 className="text-2xl font-bold text-white max-w-[250px] text-center truncate">{item.url}</h2>
-            </div>
-
-            {/* Actions / Details */}
-            <div className="w-full space-y-4">
-
-                {/* Username Field */}
-                <div className="space-y-2">
-                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest pl-1">Kullanıcı Adı</label>
-                    <div className="flex items-center gap-2 bg-zinc-800/50 p-1 rounded-2xl border border-zinc-800">
-                        <div className="flex-1 px-4 py-3 text-zinc-200 truncate font-mono">
-                            {item.username}
-                        </div>
-                        <button
-                            onClick={() => handleCopy(item.username, 'Kullanıcı adı')}
-                            className="p-3 bg-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
-                        >
-                            <Copy className="h-5 w-5" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Password Field */}
-                <div className="space-y-2">
-                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest pl-1">Parola</label>
-                    <div className="flex items-center gap-2 bg-zinc-800/50 p-1 rounded-2xl border border-zinc-800">
-                        <div className="flex-1 px-4 py-3 text-zinc-200 truncate font-mono tracking-widest">
-                            {showPassword ? item.decryptedPassword : '••••••••••••••••'}
-                        </div>
-                        <button
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="p-3 text-zinc-400 hover:text-white transition-colors"
-                        >
-                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                        <button
-                            onClick={() => handleCopy(item.decryptedPassword || '', 'Parola')}
-                            className="p-3 bg-zinc-800 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
-                        >
-                            <Copy className="h-5 w-5" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Website Link */}
-                <div className="space-y-2">
-                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest pl-1">Website</label>
-                    <a
-                        href={item.url.startsWith('http') ? item.url : `https://${item.url}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center justify-between gap-2 bg-zinc-800/30 p-4 rounded-2xl border border-zinc-800/50 hover:bg-zinc-800 hover:border-zinc-700 transition-all group"
-                    >
-                        <span className="text-indigo-400 group-hover:text-indigo-300 truncate">{item.url}</span>
-                        <ExternalLink className="h-4 w-4 text-zinc-600 group-hover:text-zinc-400" />
-                    </a>
-                </div>
-
-                {/* Notes Field */}
-                {item.notes && (
-                    <div className="space-y-2">
-                        <label className="text-xs font-medium text-zinc-500 uppercase tracking-widest pl-1">Notlar</label>
-                        <div className="bg-zinc-800/30 p-4 rounded-2xl border border-zinc-800/50 text-zinc-400 text-sm whitespace-pre-wrap">
-                            {item.notes}
-                        </div>
-                    </div>
-                )}
-
-            </div>
-
-            {/* Delete Action */}
-            <div className="pt-4 w-full">
+        <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: "spring", stiffness: 350, damping: 35 }}
+            className="fixed inset-0 z-[60] bg-black text-white flex flex-col"
+        >
+            {/* Navbar */}
+            <div className="flex items-center justify-between px-4 py-3 pt-12 bg-black/80 backdrop-blur-md sticky top-0 z-10 border-b border-white/5">
                 <button
-                    onClick={handleDelete}
-                    className="w-full py-4 text-red-500 font-medium hover:bg-red-500/10 rounded-2xl transition-colors flex items-center justify-center gap-2"
+                    onClick={closeItem}
+                    className="flex items-center text-blue-500 font-medium text-[17px] active:opacity-60 transition-opacity"
                 >
-                    <Trash2 className="h-5 w-5" />
-                    Kaydı Sil
+                    <ChevronLeft size={26} className="-ml-2" />
+                    Listeye Dön
+                </button>
+                <button className="h-10 w-10 flex items-center justify-center rounded-full bg-zinc-900 text-zinc-400 active:text-white active:bg-zinc-800 transition-all">
+                    <Edit3 size={20} />
                 </button>
             </div>
-        </div>
+
+            <div className="flex-1 overflow-y-auto px-6 pb-20 no-scrollbar">
+
+                {/* Hero Section (Logo & Title) */}
+                <div className="flex flex-col items-center py-10 gap-6">
+                    <div className="h-28 w-28 rounded-[2.5rem] bg-gradient-to-br from-zinc-800 to-black shadow-2xl shadow-blue-900/10 border border-white/10 flex items-center justify-center p-6 relative">
+                        {/* Ambient Glow */}
+                        <div className="absolute inset-0 bg-white/5 blur-xl rounded-full" />
+                        <LogoIcon title={selectedItem.url || selectedItem.serviceName} className="h-16 w-16 z-10" />
+                    </div>
+                    <div className="text-center space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight text-white">{selectedItem.serviceName}</h1>
+                        <span className="inline-flex items-center px-3 py-1 rounded-lg bg-zinc-900 text-zinc-500 text-xs font-bold uppercase tracking-widest border border-white/5">
+                            {selectedItem.category}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Info Cards */}
+                <div className="space-y-6">
+
+                    {/* Username Section */}
+                    {selectedItem.username && (
+                        <div className="bg-zinc-900/50 rounded-[1.5rem] p-1 border border-white/5">
+                            <div className="px-5 py-4 flex flex-col gap-2">
+                                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Kullanıcı Adı</label>
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-[19px] font-medium text-white truncate select-all">{selectedItem.username}</span>
+                                    <button
+                                        onClick={() => copyToClipboard(selectedItem.username, 'Kullanıcı Adı')}
+                                        className="h-10 w-10 flex items-center justify-center bg-zinc-800 rounded-full text-blue-400 active:bg-blue-500 active:text-white transition-all shadow-lg active:scale-90"
+                                    >
+                                        <Copy size={18} strokeWidth={2.5} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Password Section (The Star Show) */}
+                    <div className="bg-zinc-900/80 rounded-[1.8rem] p-5 border border-white/10 shadow-lg relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-3 opacity-10">
+                            <Lock size={100} />
+                        </div>
+
+                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Parola</label>
+
+                        <div className="flex items-center justify-center min-h-[5rem] py-2">
+                            {showPassword ? (
+                                <span className="text-2xl font-mono text-white break-all text-center selection:bg-blue-500/30">
+                                    {selectedItem.password}
+                                </span>
+                            ) : (
+                                <span className="text-4xl font-bold text-zinc-600 tracking-[0.2em] select-none">
+                                    ••••••••
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mt-4">
+                            <button
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="flex items-center justify-center gap-2 h-12 bg-zinc-800 rounded-xl text-zinc-300 font-semibold active:bg-zinc-700 transition-all active:scale-[0.98]"
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                <span>{showPassword ? 'Gizle' : 'Göster'}</span>
+                            </button>
+                            <button
+                                onClick={() => copyToClipboard(selectedItem.password, 'Parola')}
+                                className="flex items-center justify-center gap-2 h-12 bg-white text-black rounded-xl font-bold active:bg-zinc-200 transition-all active:scale-[0.98] shadow-lg shadow-white/5"
+                            >
+                                <Copy size={20} strokeWidth={2.5} />
+                                <span>Kopyala</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Website */}
+                    <a
+                        href={`https://${selectedItem.url || 'google.com'}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-between p-5 bg-zinc-900/50 rounded-2xl border border-white/5 active:bg-zinc-800 transition-colors group"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400 group-active:text-white">
+                                <Globe size={20} />
+                            </div>
+                            <span className="text-[17px] font-medium text-zinc-300 group-active:text-white">Web Sitesini Aç</span>
+                        </div>
+                        <ChevronLeft size={20} className="rotate-180 text-zinc-600" />
+                    </a>
+
+                </div>
+            </div>
+        </motion.div>
     );
 };

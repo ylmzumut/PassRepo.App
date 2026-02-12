@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Wand2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import type { Category } from '../../types';
-import * as SimpleIcons from 'simple-icons';
 
 interface AddItemModalProps {
     isOpen: boolean;
@@ -29,6 +28,15 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
         setFormData({ title: '', username: '', password: '', category: 'Genel', iconType: 'brand' });
     };
 
+    const generatePassword = () => {
+        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+        let pass = "";
+        for (let i = 0; i < 16; i++) {
+            pass += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        setFormData({ ...formData, password: pass });
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -39,7 +47,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-md z-50"
                     />
 
                     {/* Bottom Sheet */}
@@ -47,41 +55,41 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 w-full h-[95%] bg-zinc-900 rounded-t-[2rem] border-t border-white/10 shadow-2xl z-50 flex flex-col items-center"
+                        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                        className="fixed bottom-0 left-0 w-full h-[92%] bg-zinc-950 rounded-t-[2.5rem] shadow-2xl z-50 flex flex-col items-center border-t border-white/10"
                     >
                         {/* Drag Handle */}
-                        <div className="w-12 h-1.5 bg-zinc-700 rounded-full mt-4 mb-2 shrink-0" />
+                        <div className="w-14 h-1.5 bg-zinc-800 rounded-full mt-5 mb-2 shrink-0 opacity-50" />
 
                         {/* Header */}
-                        <div className="w-full flex items-center justify-between px-6 py-4">
-                            <button onClick={onClose} className="text-lg text-zinc-400 font-medium">Vazgeç</button>
-                            <h2 className="text-lg font-bold text-white">Yeni Ekle</h2>
+                        <div className="w-full flex items-center justify-between px-6 py-4 border-b border-white/5">
+                            <button onClick={onClose} className="text-[17px] text-zinc-400 font-normal active:text-white">Vazgeç</button>
+                            <h2 className="text-[17px] font-semibold text-white">Yeni Hesap</h2>
                             <button
                                 onClick={handleSave}
                                 disabled={!formData.title || !formData.password}
-                                className="text-lg text-blue-500 font-bold disabled:opacity-50"
+                                className="text-[17px] text-blue-500 font-bold disabled:opacity-40 disabled:text-zinc-600"
                             >
-                                Kaydet
+                                Bitti
                             </button>
                         </div>
 
-                        {/* Validated Form Body */}
-                        <div className="w-full flex-1 overflow-y-auto px-6 py-2 space-y-8">
+                        {/* Scrollable Body */}
+                        <div className="w-full flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-8 no-scrollbar">
 
-                            {/* Category Selection (Horizontal Scroll) */}
-                            <div className="space-y-4">
-                                <label className="text-sm font-bold text-zinc-500 uppercase tracking-widest pl-1">Kategori</label>
-                                <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
+                            {/* Section: Category */}
+                            <div className="space-y-3">
+                                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">Kategori</label>
+                                <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar scroll-smooth pl-1">
                                     {CATEGORIES.map(cat => (
                                         <button
                                             key={cat}
                                             onClick={() => setFormData({ ...formData, category: cat })}
                                             className={cn(
-                                                "px-6 py-3 rounded-full text-base font-bold whitespace-nowrap transition-all duration-200 shrink-0",
+                                                "px-5 py-3 rounded-2xl text-[15px] font-semibold whitespace-nowrap transition-all duration-200 shrink-0 border",
                                                 formData.category === cat
-                                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
-                                                    : "bg-zinc-800 text-zinc-400"
+                                                    ? "bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-900/50"
+                                                    : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800"
                                             )}
                                         >
                                             {cat}
@@ -90,68 +98,58 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
                                 </div>
                             </div>
 
-                            {/* Service Inputs */}
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-zinc-500 uppercase tracking-widest pl-1">Servis</label>
-                                    <div className="flex gap-4">
-                                        <div className="h-14 w-14 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0 border border-white/5">
-                                            {formData.title ? (
-                                                <span className="text-2xl font-bold text-white uppercase">{formData.title.charAt(0)}</span>
-                                            ) : (
-                                                <Search className="text-zinc-500" size={24} />
-                                            )}
-                                        </div>
+                            {/* Section: Service Name */}
+                            <div className="space-y-3">
+                                <div className="flex gap-4 items-center">
+                                    <div className="h-16 w-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                                        {formData.title ? (
+                                            <span className="text-3xl font-bold text-white uppercase">{formData.title.charAt(0)}</span>
+                                        ) : (
+                                            <Search className="text-zinc-600" size={28} />
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
                                         <input
                                             type="text"
-                                            placeholder="Servis Adı"
+                                            placeholder="Servis (Örn: Netflix)"
                                             value={formData.title}
+                                            autoFocus
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            className="flex-1 bg-zinc-800 rounded-xl px-5 h-14 text-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium"
+                                            className="w-full bg-zinc-900 h-16 rounded-2xl px-5 text-[19px] text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all font-medium"
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Credentials */}
-                            <div className="space-y-5">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-zinc-500 uppercase tracking-widest pl-1">Giriş Bilgileri</label>
+                            {/* Section: Credentials */}
+                            <div className="space-y-4">
+                                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">Giriş Bilgileri</label>
 
+                                <div className="bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800/50">
                                     <input
                                         type="text"
-                                        placeholder="Kullanıcı Adı (Opsiyonel)"
+                                        placeholder="Kullanıcı Adı veya E-posta"
                                         value={formData.username}
                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                        className="w-full bg-zinc-800 rounded-xl px-5 h-14 text-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium mb-3"
+                                        className="w-full bg-transparent h-16 px-5 text-[17px] text-white placeholder-zinc-600 focus:outline-none focus:bg-zinc-800/50 transition-colors border-b border-zinc-800"
                                     />
-
                                     <div className="relative">
                                         <input
                                             type="text"
                                             placeholder="Parola"
                                             value={formData.password}
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            className="w-full bg-zinc-800 rounded-xl px-5 h-14 pr-20 text-lg text-white font-mono placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                                            className="w-full bg-transparent h-16 px-5 pr-24 text-[17px] text-white font-mono placeholder-zinc-600 focus:outline-none focus:bg-zinc-800/50 transition-colors"
                                         />
                                         <button
-                                            onClick={() => setFormData({ ...formData, password: Math.random().toString(36).slice(-10) + '!A1' })}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-zinc-700/50 rounded-lg text-xs font-bold text-blue-400 hover:text-white transition-colors"
+                                            onClick={generatePassword}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-blue-500/10 rounded-lg flex items-center gap-1.5 text-xs font-bold text-blue-400 active:bg-blue-500 active:text-white transition-colors"
                                         >
+                                            <Wand2 size={12} />
                                             ÜRET
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="mt-auto pt-8 pb-8">
-                                <button
-                                    onClick={handleSave}
-                                    disabled={!formData.title || !formData.password}
-                                    className="w-full bg-white text-black font-bold h-14 rounded-2xl text-lg shadow-xl shadow-white/10 active:scale-[0.98] transition-all disabled:opacity-50 disabled:shadow-none"
-                                >
-                                    Kaydet
-                                </button>
                             </div>
 
                         </div>

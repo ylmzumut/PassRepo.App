@@ -1,0 +1,6 @@
+@PassRepo.Server_HostAddress = http://localhost:5087
+
+GET {{PassRepo.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

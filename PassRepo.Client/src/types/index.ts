@@ -1,19 +1,18 @@
-import type { LucideIcon } from 'lucide-react';
-
 export interface Category {
     id: string;
-    name: 'Banka' | 'Mail' | 'Genel' | 'Sosyal' | 'İş' | 'Diğer';
-    icon: LucideIcon;
-    color: string; // Tailwind color class like 'bg-blue-500'
+    name: string; // Artık her şeyi yazabiliriz
+    iconName: string; // Örn: 'Wallet', 'Mail', 'Key'
+    color: string; // Tailwind class örn: 'bg-blue-500'
 }
 
 export interface VaultItem {
     id: string;
     serviceName: string;
-    username?: string; // Optional now
+    username?: string;
     password?: string;
-    category: Category['name'];
-    url: string; // for logo
+    categoryId: string; // Artık ID ile bağlayacağız
+    url: string;
     logoUrl?: string;
     notes?: string;
+    createdAt: number;
 }

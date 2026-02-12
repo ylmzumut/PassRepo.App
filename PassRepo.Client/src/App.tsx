@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home'; // Updated to Home
 import AddItem from './pages/AddItem';
+import { Settings } from './pages/Settings';
 import { Toaster } from 'sonner';
 import { useAuthStore } from './store/useAuthStore';
 
@@ -32,6 +33,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AddItem />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

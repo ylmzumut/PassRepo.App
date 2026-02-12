@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Search, Wand2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
-import type { Category } from '../../types';
+// import type { Category } from '../../types'; // Buna artık gerek yok, store'dan alacağız
+import { useCategoryStore } from '../../store/categoryStore'; // Store'u çağırdık
 
 interface AddItemModalProps {
     isOpen: boolean;
@@ -10,14 +11,16 @@ interface AddItemModalProps {
     onSave: (data: any) => void;
 }
 
-const CATEGORIES: Category['name'][] = ['Banka', 'Mail', 'Genel', 'Sosyal', 'İş', 'Diğer'];
-
 export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSave }) => {
+    // Store'dan kategorileri çekiyoruz
+    const { categories } = useCategoryStore();
+
     const [formData, setFormData] = useState({
         title: '',
         username: '',
         password: '',
-        category: 'Genel' as Category['name'],
+        // Varsayılan olarak ilk kategoriyi veya 'Genel'i seçelim
+        category: 'Genel',
         iconType: 'brand' as 'brand' | 'letter',
     });
 
@@ -25,7 +28,13 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
         if (!formData.title || !formData.password || !formData.category) return;
         onSave(formData);
         onClose();
-        setFormData({ title: '', username: '', password: '', category: 'Genel', iconType: 'brand' });
+        setFormData({
+            title: '',
+            username: '',
+            password: '',
+            category: 'Genel',
+            iconType: 'brand'
+        });
     };
 
     const generatePassword = () => {
@@ -77,22 +86,22 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onS
                         {/* Scrollable Body */}
                         <div className="w-full flex-1 overflow-y-auto px-5 pt-6 pb-10 space-y-8 no-scrollbar">
 
-                            {/* Section: Category */}
+                            {/* Section: Category - ARTIK DİNAMİK */}
                             <div className="space-y-3">
                                 <label className="text-xs font-semibold text-zinc-500 uppercase tracking-widest ml-1">Kategori</label>
                                 <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar scroll-smooth pl-1">
-                                    {CATEGORIES.map(cat => (
+                                    {categories.map(cat => (
                                         <button
-                                            key={cat}
-                                            onClick={() => setFormData({ ...formData, category: cat })}
+                                            key={cat.id}
+                                            onClick={() => setFormData({ ...formData, category: cat.name })}
                                             className={cn(
                                                 "px-5 py-3 rounded-2xl text-[15px] font-semibold whitespace-nowrap transition-all duration-200 shrink-0 border",
-                                                formData.category === cat
-                                                    ? "bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-900/50"
+                                                formData.category === cat.name
+                                                    ? cn("text-white shadow-lg shadow-blue-900/20 border-transparent", cat.color) // Dinamik renk kullanımı
                                                     : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800"
                                             )}
                                         >
-                                            {cat}
+                                            {cat.name}
                                         </button>
                                     ))}
                                 </div>
